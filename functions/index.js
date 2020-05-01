@@ -38,4 +38,5 @@ exports.outstandingHabits = functions.firestore
           return null;
         });
     }
+    return null;
   });
