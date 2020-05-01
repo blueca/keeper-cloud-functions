@@ -8,30 +8,34 @@ admin.initializeApp(functions.config().firebase);
 // exports.helloWorld = functions.https.onRequest((request, response) => {
 //  response.send("Hello from Firebase!");
 // });
-exports.newUser = functions.firestore
-  .document('users/{any}')
-  .onCreate((change, context) => {
+exports.outstandingHabits = functions.firestore
+  .document('users/{userId}')
+  .onUpdate((change, context) => {
+    const oldOutstanding = change.before.data().outstanding;
+    const newOutstanding = change.after.data().outstanding;
     const userName = change.data().username;
     const userFcm = change.data().fcm;
 
     const notificationContent = {
       notification: {
-        title: `Welcome ${userName}`,
-        body: 'Thanks for signing up',
+        title: `Habits outstanding`,
+        body: `Hey ${userName}, it looks like you have some habits outstanding. Check in today to keep up with them.`,
         icon: 'default',
         sound: 'default',
       },
     };
 
-    return admin
-      .messaging()
-      .sendToDevice(userFcm, notificationContent)
-      .then((result) => {
-        console.log('Notification sent successfully');
-        return null;
-      })
-      .catch((error) => {
-        console.log('Notification sent failed', error);
-        return null;
-      });
+    if (!oldOutstanding && newOutstanding) {
+      return admin
+        .messaging()
+        .sendToDevice(userFcm, notificationContent)
+        .then((result) => {
+          console.log('Notification sent successfully');
+          return null;
+        })
+        .catch((error) => {
+          console.log('Notification sent failed', error);
+          return null;
+        });
+    }
   });
