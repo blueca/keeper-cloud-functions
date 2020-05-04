@@ -27,13 +27,16 @@ exports.outstandingHabits = functions.firestore
         .sendToDevice(userFcm, notificationContent)
         .then((result) => {
           console.log('Notification sent successfully');
+
           return null;
         })
         .catch((error) => {
           console.log('Notification sent failed', error);
+
           return null;
         });
     }
+
     return null;
   });
 
@@ -48,6 +51,22 @@ exports.flipOutstandingGoal = functions.firestore
     if (!oldOutstanding && newOutstanding) {
       db.doc(`users/${userId}/goals/${goal}`).update({ outstanding: true });
     }
+    if (oldOutstanding && !newOutstanding) {
+      db.collection(`users/${userId}/goals/${goal}/habits`)
+        .where('outstanding', '==', true)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.empty) {
+            db.doc(`users/${userId}/goals/${goal}`).update({
+              outstanding: false,
+            });
+          }
+
+          return null;
+        })
+        .catch(console.log);
+    }
+
     return null;
   });
 
@@ -61,5 +80,21 @@ exports.flipOutstandingUser = functions.firestore
     if (!oldOutstanding && newOutstanding) {
       db.doc(`users/${userId}`).update({ outstanding: true });
     }
+
+    if (oldOutstanding && !newOutstanding) {
+      db.collection(`users/${userId}/goals/`)
+        .where('outstanding', '==', true)
+        .get()
+        .then((snapshot) => {
+          if (snapshot.empty) {
+            db.doc(`users/${userId}`).update({
+              outstanding: false,
+            });
+          }
+          return null;
+        })
+        .catch(console.log);
+    }
+
     return null;
   });
