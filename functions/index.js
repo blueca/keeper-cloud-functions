@@ -37,8 +37,22 @@ exports.outstandingHabits = functions.firestore
     return null;
   });
 
-exports.flipOutstanding = functions.firestore
+exports.flipOutstandingGoal = functions.firestore
   .document('users/{userId}/goals/{goal}/habits/{habit}')
+  .onUpdate((change, context) => {
+    const oldOutstanding = change.before.data().outstanding;
+    const newOutstanding = change.after.data().outstanding;
+    const userId = context.params.userId;
+    const goal = context.params.goal;
+
+    if (!oldOutstanding && newOutstanding) {
+      db.doc(`users/${userId}/goals/${goal}`).update({ outstanding: true });
+    }
+    return null;
+  });
+
+exports.flipOutstandingUser = functions.firestore
+  .document('users/{userId}/goals/{goal}')
   .onUpdate((change, context) => {
     const oldOutstanding = change.before.data().outstanding;
     const newOutstanding = change.after.data().outstanding;
